@@ -94,7 +94,10 @@ class ago_geospatial_engine(geospatial_engine):
                 if rows == row + 1:
                     recbin_mercator.ymax = envelope_mercator.ymax
                     
-                geometries.append(recbin_mercator.polygon)
+                geometries.append(recbin_mercator)
+
+                # Creating a polygon takes some time
+                #geometries.append(recbin_mercator.polygon)
         
         return rectangular_spatial_grid(geometries)
     
