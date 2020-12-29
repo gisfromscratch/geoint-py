@@ -16,6 +16,7 @@
 from arcgis.gis import GIS
 from arcgis.geometry import Envelope
 from arcgis.geometry import project as ago_project
+from arcgis.geometry.functions import relation as ago_relation
 from math import ceil
 
 
@@ -31,6 +32,15 @@ class grid_cell:
         self._ymax = ymax
         self._wkid = wkid
 
+    def as_coordinates(self):
+        return [
+            self._xmin, self._ymin,
+            self._xmin, self._ymax,
+            self._xmax, self._ymax,
+            self._xmax, self._ymin,
+            self._xmin, self._ymin
+            ]
+
 
 
 class spatial_grid:
@@ -40,6 +50,12 @@ class spatial_grid:
     def __init__(self, cells):
         self._cells = cells
 
+    def cells_as_rings(self):
+        """
+        Returns all cells as a ring array used for constructing polygons.
+        """
+        raise NotImplementedError
+
 
 
 class rectangular_spatial_grid(spatial_grid):
@@ -47,8 +63,11 @@ class rectangular_spatial_grid(spatial_grid):
     Represents a rectangular spatial grid.
     """
 
-    def __init__(self, geometries):
-        super().__init__(geometries)
+    def __init__(self, cells):
+        super().__init__(cells)
+
+    def cells_as_rings(self):
+        return [cell.as_coordinates() for cell in self._cells]
 
 
 
@@ -60,6 +79,12 @@ class geospatial_engine:
     def create_spatial_grid(self, spacing_meters):
         """
         Create a spatial grid with the defined grid cell size in meters.
+        """
+        raise NotImplementedError
+
+    def intersections(self, grid, geometries):
+        """
+        Returns the grid cells which intersects the specified list of geometries.
         """
         raise NotImplementedError
 
@@ -114,6 +139,9 @@ class ago_geospatial_engine(geospatial_engine):
     
     def project(self, geometries, in_sr, out_sr):
         return ago_project(geometries, in_sr, out_sr)
+
+    def intersections(self, grid, geometries):
+        pass
 
 
 

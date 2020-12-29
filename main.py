@@ -24,6 +24,9 @@ class TestSpatialBinning(unittest.TestCase):
     def test_kilometer_grid(self):
         grid = create_spatial_grid(1e6)
         self.assertIsNotNone(grid, 'The grid must not be none!')
+
+        rings = grid.cells_as_rings()
+        self.assertIsNotNone(rings, 'Rings must not be none!')
  
 if __name__ == '__main__':
     unittest.main()
