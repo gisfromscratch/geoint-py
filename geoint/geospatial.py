@@ -18,12 +18,27 @@ from arcgis.geometry import Envelope
 from arcgis.geometry import project as ago_project
 from math import ceil
 
+
+
+class grid_cell:
+    """
+    Represents a rectangular spatial grid cell.
+    """
+    def __init__(self, xmin, ymin, xmax, ymax, wkid):
+        self._xmin = xmin
+        self._ymin = ymin
+        self._xmax = xmax
+        self._ymax = ymax
+        self._wkid = wkid
+
+
+
 class spatial_grid:
     """
     Represents a spatial grid.
     """
-    def __init__(self, geometries):
-        self._geometries = geometries
+    def __init__(self, cells):
+        self._cells = cells
 
 
 
@@ -82,22 +97,18 @@ class ago_geospatial_engine(geospatial_engine):
         geometries = []
         for column in range(0, columns):
             for row in range(0, rows):
-                recbin_mercator = Envelope({
-                    'xmin': envelope_mercator.xmin + (column * spacing_meters),
-                    'xmax': envelope_mercator.xmin + ((column + 1) * spacing_meters),
-                    'ymin': envelope_mercator.ymin + (row * spacing_meters),
-                    'ymax': envelope_mercator.ymin + ((row + 1) * spacing_meters),
-                    'spatialReference': {'wkid': 3857}
-                })
-                if columns == column + 1:
-                    recbin_mercator.xmax = envelope_mercator.xmax
-                if rows == row + 1:
-                    recbin_mercator.ymax = envelope_mercator.ymax
-                    
-                geometries.append(recbin_mercator)
+                xmin = envelope_mercator.xmin + (column * spacing_meters)
+                ymin = envelope_mercator.ymin + (row * spacing_meters)
+                xmax = envelope_mercator.xmin + ((column + 1) * spacing_meters)
+                ymax = envelope_mercator.ymin + ((row + 1) * spacing_meters)         
 
-                # Creating a polygon takes some time
-                #geometries.append(recbin_mercator.polygon)
+                if columns == column + 1:
+                    xmax = envelope_mercator.xmax
+                if rows == row + 1:
+                    ymax = envelope_mercator.ymax
+
+                recbin_mercator = grid_cell(xmin, ymin, xmax, ymax, wkid=3857)    
+                geometries.append(recbin_mercator)
         
         return rectangular_spatial_grid(geometries)
     
