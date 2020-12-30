@@ -183,8 +183,8 @@ class ago_geospatial_engine(geospatial_engine):
                     'hitCount': 1
                 }
             else:
-                bin = bins[grid_index]
-                bin['hitCount'] += 1
+                bin_entry = bins[grid_index]
+                bin_entry['hitCount'] += 1
         
         return list(bins.values())
 
