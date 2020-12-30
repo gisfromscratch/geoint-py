@@ -14,9 +14,10 @@
 # along with this program.  If not, see <http:#www.gnu.org/licenses/>.
 
 from arcgis.gis import GIS
-from arcgis.geometry import Envelope
+from arcgis.geometry import Envelope, Point, Polygon, SpatialReference
 from arcgis.geometry import project as ago_project
 from arcgis.geometry.functions import relation as ago_relation
+import itertools
 from math import ceil
 
 
@@ -32,13 +33,13 @@ class grid_cell:
         self._ymax = ymax
         self._wkid = wkid
 
-    def as_coordinates(self):
+    def as_ring(self):
         return [
-            self._xmin, self._ymin,
-            self._xmin, self._ymax,
-            self._xmax, self._ymax,
-            self._xmax, self._ymin,
-            self._xmin, self._ymin
+            [self._xmin, self._ymin],
+            [self._xmin, self._ymax],
+            [self._xmax, self._ymax],
+            [self._xmax, self._ymin],
+            [self._xmin, self._ymin]
             ]
 
 
@@ -62,12 +63,11 @@ class rectangular_spatial_grid(spatial_grid):
     """
     Represents a rectangular spatial grid.
     """
-
     def __init__(self, cells):
         super().__init__(cells)
 
     def cells_as_rings(self):
-        return [cell.as_coordinates() for cell in self._cells]
+        return [[cell.as_ring()] for cell in self._cells]
 
 
 
@@ -76,13 +76,19 @@ class geospatial_engine:
     Represents a geospatial engine offering geospatial operations.
     """
 
+    def create_points(self, latitudes, longitudes):
+        """
+        Creates a list of points using the latitude and longitude arrays.
+        """
+        raise NotImplementedError
+
     def create_spatial_grid(self, spacing_meters):
         """
         Create a spatial grid with the defined grid cell size in meters.
         """
         raise NotImplementedError
 
-    def intersections(self, grid, geometries):
+    def intersections(self, grid, geometries, wkid):
         """
         Returns the grid cells which intersects the specified list of geometries.
         """
@@ -100,11 +106,22 @@ class ago_geospatial_engine(geospatial_engine):
     """
     Represents a geospatial engine using ArcGIS Online.
     """
-
     def __init__(self):
         super().__init__()
-        self.gis = GIS()
+        self._gis = GIS()
 
+    def __del__(self):
+        del self._gis
+
+    def create_points(self, latitudes, longitudes):
+        if (len(latitudes) != len(longitudes)):
+            raise ValueError("Coordinate arrays must have equal length!")
+
+        return [Point({
+            'x': longitude,
+            'y': latitude
+        }) for (longitude, latitude) in zip(longitudes, latitudes)]
+    
     def create_spatial_grid(self, spacing_meters):
         # Use WGS84
         envelope_wgs84 = Envelope({
@@ -140,8 +157,33 @@ class ago_geospatial_engine(geospatial_engine):
     def project(self, geometries, in_sr, out_sr):
         return ago_project(geometries, in_sr, out_sr)
 
-    def intersections(self, grid, geometries):
-        pass
+    def intersections(self, grid, geometries, wkid):
+        # Create valid Esri polygons using rings
+        cell_polygons = []
+        for cell_rings in grid.cells_as_rings():
+            cell_polygon = Polygon({
+                'rings': cell_rings
+            })
+            cell_polygons.append(cell_polygon)
+        
+        related_result = ago_relation(cell_polygons, geometries, spatial_ref=wkid, spatial_relation='esriGeometryRelationIntersection', gis=self._gis)
+        if not ('relations' in related_result):
+            return None
+
+        bins = dict()
+        for relation in related_result['relations']:
+            grid_index = relation['geometry1Index']
+            if not (grid_index in bins):
+                bins[grid_index] = {
+                    'geometry': cell_polygons[grid_index],
+                    'hitCount': 1
+                }
+            else:
+                bin = bins[grid_index]
+                bin['hitCount'] += 1
+        
+        return list(bins.values())
+
 
 
 

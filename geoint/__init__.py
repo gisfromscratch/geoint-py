@@ -19,3 +19,10 @@ from . import geospatial
 def create_spatial_grid(spacing_meters):
     geospatial_engine = geospatial.geospatial_engine_factory.create_cloud_engine()
     return geospatial_engine.create_spatial_grid(spacing_meters)
+
+
+
+def create_bins(spatial_gid, latitudes, longitudes):
+    geospatial_engine = geospatial.geospatial_engine_factory.create_cloud_engine()
+    points = geospatial_engine.create_points(latitudes, longitudes)
+    return geospatial_engine.intersections(spatial_gid, points, wkid=4326)
