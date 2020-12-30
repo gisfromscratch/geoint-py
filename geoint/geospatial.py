@@ -108,10 +108,14 @@ class ago_geospatial_engine(geospatial_engine):
     """
     def __init__(self):
         super().__init__()
-        self._gis = GIS()
 
-    def __del__(self):
+    def __enter__(self):
+        self._gis = GIS()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         del self._gis
+        self._gis = None
 
     def create_points(self, latitudes, longitudes):
         if (len(latitudes) != len(longitudes)):
@@ -196,5 +200,6 @@ class geospatial_engine_factory:
     def create_cloud_engine():
         """
         Creates a geospatial engine using ArcGIS Online.
+        You have to ensure using the with statement, otherwise the underlying GIS instance is not initialized correctly! 
         """
         return ago_geospatial_engine()
