@@ -25,4 +25,9 @@ def create_spatial_grid(spacing_meters):
 def create_bins(spatial_gid, latitudes, longitudes):
     with geospatial.geospatial_engine_factory.create_cloud_engine() as geospatial_engine:
         points = geospatial_engine.create_points(latitudes, longitudes)
-        return geospatial_engine.intersections(spatial_gid, points, wkid=4326)
+        WGS84 = 4326
+        if (WGS84 != spatial_gid.wkid()):
+            # We need to reproject the points
+            points = geospatial_engine.project(points, WGS84, spatial_gid.wkid())
+        
+        return geospatial_engine.aggregate(spatial_gid, points, spatial_gid.wkid())

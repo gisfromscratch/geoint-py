@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http:#www.gnu.org/licenses/>.
 
+from arcgis.features import Feature, FeatureSet
 from arcgis.gis import GIS
 from arcgis.geometry import Envelope, Point, Polygon, SpatialReference
 from arcgis.geometry import project as ago_project
 from arcgis.geometry.functions import relation as ago_relation
-import itertools
 from math import ceil
 
 
@@ -32,6 +32,9 @@ class grid_cell:
         self._xmax = xmax
         self._ymax = ymax
         self._wkid = wkid
+
+    def wkid(self):
+        return self._wkid
 
     def as_ring(self):
         return [
@@ -48,9 +51,16 @@ class spatial_grid:
     """
     Represents a spatial grid.
     """
-    def __init__(self, cells):
+    def __init__(self, cells, wkid):
         self._cells = cells
+        self._wkid = wkid
 
+    def wkid(self):
+        """
+        Returns the well-known id of the spatial reference.
+        """
+        return self._wkid
+    
     def cells_as_rings(self):
         """
         Returns all cells as a ring array used for constructing polygons.
@@ -63,11 +73,42 @@ class rectangular_spatial_grid(spatial_grid):
     """
     Represents a rectangular spatial grid.
     """
-    def __init__(self, cells):
-        super().__init__(cells)
+    def __init__(self, cells, wkid):
+        super().__init__(cells, wkid)
 
     def cells_as_rings(self):
         return [[cell.as_ring()] for cell in self._cells]
+
+
+
+class spatial_grid_aggregation:
+    """
+    Represents a geometries in spatial grid aggregation.
+    """
+    def __init__(self, bins, wkid):
+        self._bins = bins
+        self._wkid = wkid
+
+    def bins(self):
+        """
+        Returns a list of all bins.
+        """
+        return list(self._bins.values())
+    
+    def to_featureset(self):
+        """
+        Return a feature set
+        """
+        bin_features = []
+        for bin_entry in self.bins():
+            bin_feature = Feature(
+                geometry=bin_entry['geometry'],
+                attributes={ 'hitCount': bin_entry['hitCount'] }
+            )
+            bin_features.append(bin_feature)
+
+        bin_fields = ['hitCount']
+        return FeatureSet(bin_features, bin_fields, geometry_type='esriGeometryPolygon', spatial_reference=self._wkid)
 
 
 
@@ -88,9 +129,9 @@ class geospatial_engine:
         """
         raise NotImplementedError
 
-    def intersections(self, grid, geometries, wkid):
+    def aggregate(self, grid, geometries, wkid):
         """
-        Returns the grid cells which intersects the specified list of geometries.
+        Returns the aggregation between grid cells which intersects the specified list of geometries.
         """
         raise NotImplementedError
 
@@ -159,12 +200,15 @@ class ago_geospatial_engine(geospatial_engine):
                 recbin_mercator = grid_cell(xmin, ymin, xmax, ymax, wkid=3857)    
                 geometries.append(recbin_mercator)
         
-        return rectangular_spatial_grid(geometries)
+        return rectangular_spatial_grid(geometries, wkid=3857)
     
     def project(self, geometries, in_sr, out_sr):
         return ago_project(geometries, in_sr, out_sr)
 
-    def intersections(self, grid, geometries, wkid):
+    def aggregate(self, grid, geometries, wkid):
+        if (grid.wkid() != wkid):
+            raise ValueError("The WKID of the grid must match the WKID of the geometries!")
+
         # Create valid Esri polygons using rings
         cell_polygons = []
         for cell_rings in grid.cells_as_rings():
@@ -189,8 +233,7 @@ class ago_geospatial_engine(geospatial_engine):
                 bin_entry = bins[grid_index]
                 bin_entry['hitCount'] += 1
         
-        return list(bins.values())
-
+        return spatial_grid_aggregation(bins, wkid)
 
 
 
