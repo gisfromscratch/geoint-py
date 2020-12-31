@@ -114,6 +114,9 @@ class ago_geospatial_engine(geospatial_engine):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if (self._gis._con and self._gis._con._session):
+            self._gis._con._session.close()
+
         del self._gis
         self._gis = None
 
