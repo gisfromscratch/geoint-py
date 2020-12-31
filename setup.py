@@ -12,7 +12,7 @@
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program.  If not, see <http:#www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
 import setuptools
@@ -22,7 +22,7 @@ with open("README.md", "r") as readme_file:
 
 setuptools.setup(
     name="geoint",
-    version="0.1",
+    version="0.1.dev1",
     author="Jan Tschada",
     author_email="gisfromscratch@live.de",
     description="Simple python module for geospatial intelligence workflows.",
