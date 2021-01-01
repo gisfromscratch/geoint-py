@@ -22,7 +22,7 @@ with open("README.md", "r") as readme_file:
 
 setuptools.setup(
     name="geoint",
-    version="0.1.dev1",
+    version="0.1a1",
     author="Jan Tschada",
     author_email="gisfromscratch@live.de",
     description="Simple python module for geospatial intelligence workflows.",
