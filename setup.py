@@ -17,23 +17,27 @@
 
 import setuptools
 
-with open("README.md", "r") as readme_file:
+"""
+Install with python setup.py sdist bdist_wheel
+"""
+
+with open('README.md', 'r', encoding='utf-8') as readme_file:
     long_description = readme_file.read()
 
 setuptools.setup(
-    name="geoint",
-    version="0.1a1",
-    author="Jan Tschada",
-    author_email="gisfromscratch@live.de",
-    description="Simple python module for geospatial intelligence workflows.",
+    name='geoint',
+    version='0.1a3',
+    author='Jan Tschada',
+    author_email='gisfromscratch@live.de',
+    description='Simple python module for geospatial intelligence workflows.',
     long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/gisfromscratch/geoint-py",
-    packages=["geoint"],
-    install_requires=["arcgis>=1.8.0", "pandas>=1.0.0"],
+    long_description_content_type='text/markdown',
+    url='https://github.com/gisfromscratch/geoint-py',
+    packages=['geoint'],
+    install_requires=['arcgis>=1.8.0', 'pandas>=1.0.0'],
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "LICENSE :: OSI APPROVED :: GNU LESSER GENERAL PUBLIC LICENSE V3",
-        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Operating System :: OS Independent',
      ]
  )
