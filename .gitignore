@@ -351,3 +351,8 @@ MigrationBackup/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Setup tools folders
+build/
+dist/
+*.egg-info/
