@@ -18,7 +18,8 @@ from arcgis.gis import GIS
 from arcgis.geometry import Envelope, Point, Polygon, SpatialReference
 from arcgis.geometry import project as ago_project
 from arcgis.geometry.functions import relation as ago_relation
-from math import ceil
+from itertools import chain
+from math import ceil, log10, pi, tan
 
 
 
@@ -203,7 +204,19 @@ class ago_geospatial_engine(geospatial_engine):
         return rectangular_spatial_grid(geometries, wkid=3857)
     
     def project(self, geometries, in_sr, out_sr):
-        return ago_project(geometries, in_sr, out_sr)
+        chunk_size = 1000
+        if (len(geometries) <= chunk_size):
+            return ago_project(geometries, in_sr, out_sr)
+        
+        # Use an offline projection engine
+        geometries_chunked = lambda geometries, chunk_size: [geometries[index: index + chunk_size] for index in range(0, len(geometries), chunk_size)]
+        geometries_projected = []
+        for chunk in geometries_chunked:
+            chunk_projected = ago_project(chunk, in_sr, out_sr)
+            geometries_projected.extend(chunk_projected)
+        
+        return geometries_projected
+        #return list(chain(*[ago_project(chunk, in_sr, out_sr) for chunk in geometries_chunked]))
 
     def aggregate(self, grid, geometries, wkid):
         if (grid.wkid() != wkid):
