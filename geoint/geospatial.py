@@ -240,8 +240,15 @@ class ago_geospatial_engine(geospatial_engine):
         }) for wgs84_point in wgs84_points]
     
     def aggregate(self, grid, geometries, wkid):
+        if (0 == len(geometries)):
+            return spatial_grid_aggregation(dict(), wkid)
+
         if (grid.wkid() != wkid):
-            raise ValueError("The WKID of the grid must match the WKID of the geometries!")
+            raise ValueError('The WKID of the grid must match the WKID of the geometries!')
+
+        max_geometry_count = 1000
+        if (max_geometry_count < len(geometries)):
+            raise ValueError('Not more than %d geometries are supported with this implementation!' % max_geometry_count)
 
         # Create valid Esri polygons using rings
         cell_polygons = []
