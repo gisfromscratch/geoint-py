@@ -65,10 +65,12 @@ class TestSpatialBinning(unittest.TestCase):
             self.assertIsNotNone(projected_points, 'The projected points must not be none!')
             self.assertEqual(len(points), len(projected_points), 'The same number of points must be returned!')
 
-            expected_latitudes = [6771001.917079877, 6574442.434743122]
-            expected_longitudes = [1363168.390483571, 789866.3337287647]
-            self.assertListEqual(expected_latitudes, [projected_points[0].y, projected_points[1].y], 'The latitudes do not match!')
-            self.assertListEqual(expected_longitudes, [projected_points[0].x, projected_points[1].x], 'The longitudes do not match!')
+            coordinate_precision = 7
+            rounded_coordinates = lambda coordinates: [round(coordinate, coordinate_precision) for coordinate in coordinates]
+            expected_latitudes = rounded_coordinates([6771001.917079877, 6574442.434743122])
+            expected_longitudes = rounded_coordinates([1363168.390483571, 789866.3337287647])
+            self.assertListEqual(expected_latitudes, rounded_coordinates([projected_points[0].y, projected_points[1].y]), 'The latitudes do not match!')
+            self.assertListEqual(expected_longitudes, rounded_coordinates([projected_points[0].x, projected_points[1].x]), 'The longitudes do not match!')
 
 
 

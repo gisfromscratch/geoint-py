@@ -19,7 +19,7 @@ from arcgis.geometry import Envelope, Point, Polygon, SpatialReference
 from arcgis.geometry import project as ago_project
 from arcgis.geometry.functions import relation as ago_relation
 from itertools import chain
-from math import ceil, log10, pi, tan
+from math import ceil, log, pi, tan
 
 
 
@@ -204,11 +204,23 @@ class ago_geospatial_engine(geospatial_engine):
         return rectangular_spatial_grid(geometries, wkid=3857)
     
     def project(self, geometries, in_sr, out_sr):
+        if (0 == len(geometries)):
+            return []
+
+        # Special cases (WGS84 points to Web Mercator)
+        first_geometry = geometries[0]
+        if ('Point' == first_geometry.type
+            and 4326 == in_sr and 3857 == out_sr):
+            return self._project_points_from_wgs84_to_web_mercator(geometries)
+
         chunk_size = 1000
         if (len(geometries) <= chunk_size):
             return ago_project(geometries, in_sr, out_sr)
         
+        raise ValueError('Only %d geometries allowed!' % chunk_size)
+
         # Use an offline projection engine
+        '''
         geometries_chunked = lambda geometries, chunk_size: [geometries[index: index + chunk_size] for index in range(0, len(geometries), chunk_size)]
         geometries_projected = []
         for chunk in geometries_chunked:
@@ -216,8 +228,17 @@ class ago_geospatial_engine(geospatial_engine):
             geometries_projected.extend(chunk_projected)
         
         return geometries_projected
+        '''
         #return list(chain(*[ago_project(chunk, in_sr, out_sr) for chunk in geometries_chunked]))
 
+    def _project_points_from_wgs84_to_web_mercator(self, wgs84_points):
+        major_axis = 6378137
+        major_shift = pi * major_axis
+        return [Point({
+            'x': wgs84_point.x * major_shift / 180.0,
+            'y': (log(tan((90.0 + wgs84_point.y) * pi / 360.0)) / (pi / 180.0)) * major_shift / 180.0
+        }) for wgs84_point in wgs84_points]
+    
     def aggregate(self, grid, geometries, wkid):
         if (grid.wkid() != wkid):
             raise ValueError("The WKID of the grid must match the WKID of the geometries!")
