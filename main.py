@@ -28,6 +28,7 @@ class TestSpatialBinning(unittest.TestCase):
         rings = grid.cells_as_rings()
         self.assertIsNotNone(rings, 'Rings must not be none!')
 
+    @unittest.skip("Tryouts...")
     def test_binning_grid(self):
         grid = create_spatial_grid(10e6)
         self.assertIsNotNone(grid, 'The grid must not be none!')
@@ -49,6 +50,25 @@ class TestSpatialBinning(unittest.TestCase):
 
         feature_set = aggregation.to_featureset()
         self.assertIsNotNone(feature_set, 'The feature set must not be none!')
+
+    def test_reproject_locations(self):
+        WGS84 = 4326
+        WEB_MERCATOR = 3857
+        latitudes = [51.83864, 50.73438]
+        longitudes = [12.24555, 7.09549]
+        with geospatial.geospatial_engine_factory.create_cloud_engine() as geospatial_engine:
+            points = geospatial_engine.create_points(latitudes, longitudes)
+            self.assertIsNotNone(points, 'The points must not be none!')
+            self.assertEqual(2, len(points), 'Two points were expected!')
+
+            projected_points = geospatial_engine.project(points, WGS84, WEB_MERCATOR)
+            self.assertIsNotNone(projected_points, 'The projected points must not be none!')
+            self.assertEqual(len(points), len(projected_points), 'The same number of points must be returned!')
+
+            expected_latitudes = [6771001.917079877, 6574442.434743122]
+            expected_longitudes = [1363168.390483571, 789866.3337287647]
+            self.assertListEqual(expected_latitudes, [projected_points[0].y, projected_points[1].y], 'The latitudes do not match!')
+            self.assertListEqual(expected_longitudes, [projected_points[0].x, projected_points[1].x], 'The longitudes do not match!')
 
 
 
