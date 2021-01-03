@@ -102,7 +102,7 @@ class rectangular_construct_params():
         self._extent = extent
         self._cell_size = cell_size
         self._row_count = int(ceil(self._extent.height() / self._cell_size))
-        self._column_count = int(ceil(self._extent.width() / self._cell_size)) - 1
+        self._column_count = int(ceil(self._extent.width() / self._cell_size))
 
     def rows(self):
         return self._row_count
@@ -126,13 +126,29 @@ class rectangular_construct_params():
 
         return grid_cell(cell_xmin, cell_ymin, cell_xmax, cell_ymax, self._extent.wkid())
 
+    def construct_cells(self):
+        """
+        Construct all cells in a column-wise manner.
+        """
+        cells = []
+        for column in range(0, self._column_count):
+            for row in range(0, self._row_count):
+                cell = self.construct_cell(row, column)
+                cells.append(cell)
+        
+        return cells
+
     def find_index(self, x, y):
+        """
+        Returns the cell index.
+        Expects the cells were constructed column-wise!
+        """
         if not self._extent.intersects(x, y):
             return -1
 
         column_index = int(floor((x - self._extent._xmin) / self._cell_size))
         row_index = int(floor((y - self._extent._ymin) / self._cell_size))
-        return column_index + (self._column_count * row_index)
+        return row_index + (self._row_count * column_index)
 
 
 
@@ -145,13 +161,8 @@ class rectangular_spatial_grid(spatial_grid):
 
     @staticmethod
     def build_from_params(construct_params):
-        rows = construct_params.rows()
-        columns = construct_params.columns()
-        cells = []
-        for column in range(0, columns):
-            for row in range(0, rows):
-                cell = construct_params.construct_cell(row, column)
-                cells.append(cell)
+        # Create all cells
+        cells = construct_params.construct_cells()
         
         # Create the grid and set the construction params
         # these can be used for finding the cells intersecting with points later
@@ -327,9 +338,11 @@ class ago_geospatial_engine(geospatial_engine):
             raise ValueError('The WKID of the grid must match the WKID of the geometries!')
 
         # Special cases (only points with grid aggregation)
+        #"""
         first_geometry = geometries[0]
         if ('Point' == first_geometry.type):
             return self._aggregate_points(grid, geometries, wkid)
+        #"""
 
         max_geometry_count = 1000
         if (max_geometry_count < len(geometries)):

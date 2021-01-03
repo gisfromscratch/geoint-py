@@ -51,6 +51,7 @@ class TestSpatialBinning(unittest.TestCase):
         feature_set = aggregation.to_featureset()
         self.assertIsNotNone(feature_set, 'The feature set must not be none!')
 
+    #@unittest.skip("Tryouts...")
     def test_reproject_locations(self):
         WGS84 = 4326
         WEB_MERCATOR = 3857
