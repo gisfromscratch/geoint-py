@@ -37,6 +37,12 @@ class grid_cell:
     def wkid(self):
         return self._wkid
 
+    def height(self):
+        return self._ymax - self._ymin
+
+    def width(self):
+        return self._xmax - self._xmin
+
     def as_ring(self):
         return [
             [self._xmin, self._ymin],
@@ -68,6 +74,48 @@ class spatial_grid:
         """
         raise NotImplementedError
 
+    def intersect(self, point):
+        """
+        Returns the first cell which intersects with the specified point.
+        The point must have the same spatial reference!
+        """
+        raise NotImplementedError
+
+
+
+class rectangular_construct_params():
+    """
+    Represents the parameters for constructing a rectangular spatial grid.
+    The extent is defined by a grid_cell representing the full extent.
+    """
+    def __init__(self, extent, cell_size):
+        self._extent = extent
+        self._cell_size = cell_size
+        self._row_count = int(ceil(self._extent.height() / self._cell_size))
+        self._column_count = int(ceil(self._extent.width() / self._cell_size)) - 1
+
+    def rows(self):
+        return self._row_count
+
+    def columns(self):
+        return self._column_count
+
+    def wkid(self):
+        return self._extent.wkid()
+
+    def construct_cell(self, row, column):
+        cell_xmin = self._extent._xmin + (column * self._cell_size)
+        cell_ymin = self._extent._ymin + (row * self._cell_size)
+        cell_xmax = self._extent._xmin + ((column + 1) * self._cell_size)
+        cell_ymax = self._extent._ymin + ((row + 1) * self._cell_size)         
+
+        if self._column_count == column + 1:
+            cell_xmax = self._extent._xmax
+        if self._row_count == row + 1:
+            cell_ymax = self._extent._ymax
+
+        return grid_cell(cell_xmin, cell_ymin, cell_xmax, cell_ymax, self._extent.wkid())
+
 
 
 class rectangular_spatial_grid(spatial_grid):
@@ -77,8 +125,30 @@ class rectangular_spatial_grid(spatial_grid):
     def __init__(self, cells, wkid):
         super().__init__(cells, wkid)
 
+    @staticmethod
+    def build_from_params(construct_params):
+        rows = construct_params.rows()
+        columns = construct_params.columns()
+        cells = []
+        for column in range(0, columns):
+            for row in range(0, rows):
+                cell = construct_params.construct_cell(row, column)
+                cells.append(cell)
+        
+        # Create the grid and set the construction params
+        # these can be used for finding the cells intersecting with points later
+        grid = rectangular_spatial_grid(cells, construct_params.wkid())
+        grid._construct = construct_params
+        return grid
+
     def cells_as_rings(self):
         return [[cell.as_ring()] for cell in self._cells]
+
+    def intersect(self, point):
+        if not self._construct:
+            return None
+
+        return {}
 
 
 
@@ -183,25 +253,10 @@ class ago_geospatial_engine(geospatial_engine):
         input_geometries = [envelope_wgs84]
         projected_geometries = self.project(input_geometries, in_sr='4326', out_sr='3857')
         envelope_mercator = projected_geometries[0]
-        rows = int(ceil((envelope_mercator.ymax - envelope_mercator.ymin) / spacing_meters))
-        columns = int(ceil((envelope_mercator.xmax - envelope_mercator.xmin) / spacing_meters)) - 1
-        geometries = []
-        for column in range(0, columns):
-            for row in range(0, rows):
-                xmin = envelope_mercator.xmin + (column * spacing_meters)
-                ymin = envelope_mercator.ymin + (row * spacing_meters)
-                xmax = envelope_mercator.xmin + ((column + 1) * spacing_meters)
-                ymax = envelope_mercator.ymin + ((row + 1) * spacing_meters)         
 
-                if columns == column + 1:
-                    xmax = envelope_mercator.xmax
-                if rows == row + 1:
-                    ymax = envelope_mercator.ymax
-
-                recbin_mercator = grid_cell(xmin, ymin, xmax, ymax, wkid=3857)    
-                geometries.append(recbin_mercator)
-        
-        return rectangular_spatial_grid(geometries, wkid=3857)
+        extent_cell = grid_cell(envelope_mercator.xmin, envelope_mercator.ymin, envelope_mercator.xmax, envelope_mercator.ymax, 3857)
+        construct_params = rectangular_construct_params(extent_cell, spacing_meters)
+        return rectangular_spatial_grid.build_from_params(construct_params)
     
     def project(self, geometries, in_sr, out_sr):
         if (0 == len(geometries)):
@@ -217,7 +272,7 @@ class ago_geospatial_engine(geospatial_engine):
         if (len(geometries) <= chunk_size):
             return ago_project(geometries, in_sr, out_sr)
         
-        raise ValueError('Only %d geometries allowed!' % chunk_size)
+        raise ValueError('Only {} geometries allowed!'.format(chunk_size))
 
         # Use an offline projection engine
         '''
@@ -248,7 +303,7 @@ class ago_geospatial_engine(geospatial_engine):
 
         max_geometry_count = 1000
         if (max_geometry_count < len(geometries)):
-            raise ValueError('Not more than %d geometries are supported with this implementation!' % max_geometry_count)
+            raise ValueError('Not more than {} geometries are supported with this implementation!'.format(max_geometry_count))
 
         # Create valid Esri polygons using rings
         cell_polygons = []

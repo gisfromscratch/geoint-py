@@ -20,7 +20,7 @@ from geoint import *
 
 class TestSpatialBinning(unittest.TestCase):
    
-    @unittest.skip("Tryouts...")
+    #@unittest.skip("Tryouts...")
     def test_kilometer_grid(self):
         grid = create_spatial_grid(10e6)
         self.assertIsNotNone(grid, 'The grid must not be none!')
@@ -28,7 +28,7 @@ class TestSpatialBinning(unittest.TestCase):
         rings = grid.cells_as_rings()
         self.assertIsNotNone(rings, 'Rings must not be none!')
 
-    @unittest.skip("Tryouts...")
+    #@unittest.skip("Tryouts...")
     def test_binning_grid(self):
         grid = create_spatial_grid(10e6)
         self.assertIsNotNone(grid, 'The grid must not be none!')
