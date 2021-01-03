@@ -43,6 +43,12 @@ class grid_cell:
     def width(self):
         return self._xmax - self._xmin
 
+    def center_x(self):
+        return self._xmin + (0.5 * self.width())
+
+    def center_y(self):
+        return self._ymin + (0.5 * self.height())
+
     def intersects(self, x, y):
         return (self._xmin <= x and x <= self._xmax and self._ymin <= y and y <= self._ymax)
 
@@ -70,6 +76,12 @@ class spatial_grid:
         Returns the well-known id of the spatial reference.
         """
         return self._wkid
+
+    def cells(self):
+        """
+        Returns all cells of this grid.
+        """
+        raise NotImplementedError
     
     def cells_as_rings(self):
         """
@@ -170,6 +182,9 @@ class rectangular_spatial_grid(spatial_grid):
         grid._construct = construct_params
         return grid
 
+    def cells(self):
+        return self._cells
+    
     def cells_as_rings(self):
         return [[cell.as_ring()] for cell in self._cells]
 
@@ -278,7 +293,7 @@ class ago_geospatial_engine(geospatial_engine):
         }) for (longitude, latitude) in zip(longitudes, latitudes)]
     
     def create_spatial_grid(self, spacing_meters):
-        # Use WGS84
+        # Use WGS84 and reproject to Web Mercator
         envelope_wgs84 = Envelope({
             'xmin': -180.0, 
             'ymin': -90.0, 

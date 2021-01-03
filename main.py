@@ -21,12 +21,14 @@ from geoint import *
 class TestSpatialBinning(unittest.TestCase):
    
     #@unittest.skip("Tryouts...")
-    def test_kilometer_grid(self):
-        grid = create_spatial_grid(10e6)
+    def test_500_kilometer_grid(self):
+        grid = create_spatial_grid(500e3)
         self.assertIsNotNone(grid, 'The grid must not be none!')
 
         rings = grid.cells_as_rings()
-        self.assertIsNotNone(rings, 'Rings must not be none!')
+        self.assertIsNotNone(rings, 'The rings must not be none!')
+
+
 
     #@unittest.skip("Tryouts...")
     def test_binning_grid(self):
@@ -50,6 +52,32 @@ class TestSpatialBinning(unittest.TestCase):
 
         feature_set = aggregation.to_featureset()
         self.assertIsNotNone(feature_set, 'The feature set must not be none!')
+
+    
+
+    #@unittest.skip("Tryouts...")
+    def test_binning_all_cells(self):
+        """
+        Tests the binning of a Web Mercator spatial grid with all the cells.
+        The cells center points are Web Mercator and should create a bin for every point (cell).
+        Each bin must have a hitCount of 1.
+        """
+        grid = create_spatial_grid(10e6)
+        self.assertIsNotNone(grid, 'The grid must not be none!')
+
+        cells = grid.cells()
+        self.assertIsNotNone(cells, 'The cells must not be none!')
+
+        y_coordinates = [cell.center_y() for cell in cells]
+        x_coordinates = [cell.center_x() for cell in cells]
+        aggregation = create_mercator_bins(grid, y_coordinates, x_coordinates)
+        bins = aggregation.bins()
+        self.assertIsNotNone(bins, 'Bins must not be none!')
+        self.assertEqual(len(cells), len(bins), 'The number of bins must match the number of cells!')
+        for bin_entry in bins:
+            self.assertEqual(1, bin_entry['hitCount'], 'Every bin must have a hit count of 1!')
+
+
 
     #@unittest.skip("Tryouts...")
     def test_reproject_locations(self):
