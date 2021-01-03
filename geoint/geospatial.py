@@ -19,7 +19,7 @@ from arcgis.geometry import Envelope, Point, Polygon, SpatialReference
 from arcgis.geometry import project as ago_project
 from arcgis.geometry.functions import relation as ago_relation
 from itertools import chain
-from math import ceil, log, pi, tan
+from math import ceil, floor, log, pi, tan
 
 
 
@@ -42,6 +42,9 @@ class grid_cell:
 
     def width(self):
         return self._xmax - self._xmin
+
+    def intersects(self, x, y):
+        return (self._xmin <= x and x <= self._xmax and self._ymin <= y and y <= self._ymax)
 
     def as_ring(self):
         return [
@@ -74,10 +77,17 @@ class spatial_grid:
         """
         raise NotImplementedError
 
-    def intersect(self, point):
+    def find_index(self, x, y):
         """
-        Returns the first cell which intersects with the specified point.
-        The point must have the same spatial reference!
+        Returns the cell index or -1 when the specified coordinates do not intersect
+        with any of these cells.
+        """
+        raise NotImplementedError
+    
+    def intersect(self, x, y):
+        """
+        Returns the first cell which intersects with the specified coordinates.
+        The coordinates must have the same spatial reference!
         """
         raise NotImplementedError
 
@@ -116,6 +126,14 @@ class rectangular_construct_params():
 
         return grid_cell(cell_xmin, cell_ymin, cell_xmax, cell_ymax, self._extent.wkid())
 
+    def find_index(self, x, y):
+        if not self._extent.intersects(x, y):
+            return -1
+
+        column_index = int(floor((x - self._extent._xmin) / self._cell_size))
+        row_index = int(floor((y - self._extent._ymin) / self._cell_size))
+        return column_index + (self._column_count * row_index)
+
 
 
 class rectangular_spatial_grid(spatial_grid):
@@ -144,11 +162,18 @@ class rectangular_spatial_grid(spatial_grid):
     def cells_as_rings(self):
         return [[cell.as_ring()] for cell in self._cells]
 
-    def intersect(self, point):
+    def find_index(self, x, y):
+        return self._construct.find_index(x, y)
+    
+    def intersect(self, x, y):
         if not self._construct:
             return None
 
-        return {}
+        cell_index = self.find_index(x, y)
+        if -1 == cell_index:
+            return None
+        
+        return self._cells[cell_index]
 
 
 
@@ -301,6 +326,11 @@ class ago_geospatial_engine(geospatial_engine):
         if (grid.wkid() != wkid):
             raise ValueError('The WKID of the grid must match the WKID of the geometries!')
 
+        # Special cases (only points with grid aggregation)
+        first_geometry = geometries[0]
+        if ('Point' == first_geometry.type):
+            return self._aggregate_points(grid, geometries, wkid)
+
         max_geometry_count = 1000
         if (max_geometry_count < len(geometries)):
             raise ValueError('Not more than {} geometries are supported with this implementation!'.format(max_geometry_count))
@@ -312,12 +342,14 @@ class ago_geospatial_engine(geospatial_engine):
                 'rings': cell_rings
             })
             cell_polygons.append(cell_polygon)
+
+        # The aggregated bins
+        bins = dict()
         
         related_result = ago_relation(cell_polygons, geometries, spatial_ref=wkid, spatial_relation='esriGeometryRelationIntersection', gis=self._gis)
         if not ('relations' in related_result):
             return None
 
-        bins = dict()
         for relation in related_result['relations']:
             grid_index = relation['geometry1Index']
             if not (grid_index in bins):
@@ -329,6 +361,37 @@ class ago_geospatial_engine(geospatial_engine):
                 bin_entry = bins[grid_index]
                 bin_entry['hitCount'] += 1
         
+        return spatial_grid_aggregation(bins, wkid)
+
+    def _aggregate_points(self, grid, points, wkid):
+        # Create valid Esri polygons using rings
+        cell_polygons = []
+        for cell_rings in grid.cells_as_rings():
+            cell_polygon = Polygon({
+                'rings': cell_rings
+            })
+            cell_polygons.append(cell_polygon)
+
+        # The aggregated bins
+        bins = dict()
+
+        for point in points:
+            if ('Point' != point.type):
+                raise ValueError('Only points can be aggregated with this implementation!')
+
+            x = point.x
+            y = point.y
+            grid_index = grid.find_index(x, y)
+            if -1 != grid_index:
+                if not (grid_index in bins):
+                    bins[grid_index] = {
+                        'geometry': cell_polygons[grid_index],
+                        'hitCount': 1
+                    }
+                else:
+                    bin_entry = bins[grid_index]
+                    bin_entry['hitCount'] += 1
+
         return spatial_grid_aggregation(bins, wkid)
 
 
