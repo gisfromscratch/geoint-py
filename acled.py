@@ -31,6 +31,22 @@ def assign_points(acled_data):
         y = [mercator_point.y for mercator_point in mercator_points]
         return acled_data.assign(x=x, y=y)
 
+def aggregate_locations(acled_data_spatial, area_data):
+    grid_locations = []
+    for index, area_row in area_data.iterrows():
+        area_envelope = area_row['SHAPE'].envelope
+        grid_location = { 
+            'hitCount': area_row['hitCount'], 
+            'locations': acled_data_spatial[(area_envelope.xmin <= acled_data_spatial['x']) \
+                                            & (acled_data_spatial['x'] <= area_envelope.xmax) \
+                                            & (area_envelope.ymin <= acled_data_spatial['y']) \
+                                            & (acled_data_spatial['y'] <= area_envelope.ymax) \
+                                           ]
+        }           
+        grid_locations.append(grid_location)
+    
+    return grid_locations
+
 def size_by(acled_data, columns):
     """Group by drops None values!"""
     return acled_data.groupby(columns).size().nlargest(10)
@@ -58,6 +74,42 @@ def count_by_subevents(acled_data):
 def count_by_event_date(acled_data):
     return acled_data.groupby(['country', 'location'])['event_date'].nunique().nlargest(5)
 
+def write_excel_sheet(acled_data, writer, sheet_name):
+    if acled_data.empty:
+        print('Data is empty no excel sheet {} was created!'.format(sheet_name))
+        return
+
+    acled_data.to_excel(writer, sheet_name)
+    
+
+def write_excel_report(acled_data, file_name):
+    if acled_data.empty:
+        print('Data is empty no excel report was created!')
+        return
+
+    spatial_grid = geoint.create_spatial_grid(spacing_meters=5e4)
+    acled_spatial = assign_points(acled_data)
+    grid_aggregation = geoint.create_mercator_bins(spatial_grid, acled_spatial['y'], acled_spatial['x'])
+    grid_featureset = grid_aggregation.to_featureset()
+    hot_spots = grid_featureset.sdf.nlargest(3, 'hitCount')[['hitCount', 'SHAPE']]
+        
+    filepath = os.path.join(tempfile.gettempdir(), file_name)
+    with pandas.ExcelWriter(filepath) as writer:
+        write_excel_sheet(size_by_country(acled_data), writer, sheet_name='countries')
+        write_excel_sheet(size_by_admin1(acled_data), writer, sheet_name='admin1')
+        write_excel_sheet(size_by_admin2(acled_data), writer, sheet_name='admin2')
+        write_excel_sheet(size_by_admin3(acled_data), writer, sheet_name='admin3')
+        write_excel_sheet(size_by_locations(acled_data), writer, sheet_name='locations')
+        write_excel_sheet(count_by_subevents(acled_data), writer, sheet_name='event_types')
+        write_excel_sheet(count_by_event_date(acled_data), writer, sheet_name='event_dates')
+
+        aggregations = aggregate_locations(acled_spatial, hot_spots)
+        for index in range(0, len(aggregations)):
+            aggregation = aggregations[index]
+            write_excel_sheet(aggregation['locations'], writer, sheet_name='hot_spots_{}'.format(index + 1))
+
+    print(filepath)
+
 
 
 if __name__ == '__main__':
@@ -74,18 +126,10 @@ if __name__ == '__main__':
     if None is acled_filepath:
         raise ValueError('Define an environment variable named \'%s\' or pass an argument representing the full qualified filepath to the *.csv file containing the ACLED events!' % (acled_environ_key))
     
-    print('Create ACLED report...')
+    print('Create ACLED reports...')
     acled_data = pandas.read_csv(acled_filepath, encoding='utf_8')
     acled_data_demonstrations = acled_data[(acled_data['event_type'] == 'Protests') | (acled_data['event_type'] == 'Riots')]
+    write_excel_report(acled_data_demonstrations, 'acled_stats.xlsx')
 
-    filepath = os.path.join(tempfile.gettempdir(), 'acled_stats.xlsx')
-    with pandas.ExcelWriter(filepath) as writer:
-        size_by_country(acled_data_demonstrations).to_excel(writer, sheet_name='countries')
-        size_by_admin1(acled_data_demonstrations).to_excel(writer, sheet_name='admin1')
-        size_by_admin2(acled_data_demonstrations).to_excel(writer, sheet_name='admin2')
-        size_by_admin3(acled_data_demonstrations).to_excel(writer, sheet_name='admin3')
-        size_by_locations(acled_data_demonstrations).to_excel(writer, sheet_name='locations')
-        count_by_subevents(acled_data_demonstrations).to_excel(writer, sheet_name='event_types')
-        count_by_event_date(acled_data_demonstrations).to_excel(writer, sheet_name='event_dates')
-
-    print(filepath)
+    acled_data_germany = acled_data[(acled_data['country'] == 'Germany')]
+    write_excel_report(acled_data_germany, 'acled_stats_germany.xlsx')
