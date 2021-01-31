@@ -33,7 +33,7 @@ def assign_points(acled_data):
 
 def size_by(acled_data, columns):
     """Group by drops None values!"""
-    return acled_data.groupby(columns).size().nlargest(5)
+    return acled_data.groupby(columns).size().nlargest(10)
 
 def size_by_country(acled_data):
     return size_by(acled_data, ['country'])
@@ -49,6 +49,11 @@ def size_by_admin3(acled_data):
 
 def size_by_locations(acled_data):
     return size_by(acled_data, ['country', 'location'])
+
+def count_by_subevents(acled_data):
+    sizes = size_by_locations(acled_data)
+    min_size = sizes[-1]
+    return acled_data.groupby(['country', 'location']).filter(lambda group: min_size <= len(group))['sub_event_type'].value_counts()
 
 def count_by_event_date(acled_data):
     return acled_data.groupby(['country', 'location'])['event_date'].nunique().nlargest(5)
@@ -80,6 +85,7 @@ if __name__ == '__main__':
         size_by_admin2(acled_data_demonstrations).to_excel(writer, sheet_name='admin2')
         size_by_admin3(acled_data_demonstrations).to_excel(writer, sheet_name='admin3')
         size_by_locations(acled_data_demonstrations).to_excel(writer, sheet_name='locations')
+        count_by_subevents(acled_data_demonstrations).to_excel(writer, sheet_name='event_types')
         count_by_event_date(acled_data_demonstrations).to_excel(writer, sheet_name='event_dates')
 
     print(filepath)
