@@ -74,6 +74,11 @@ def count_by_subevents(acled_data):
 def count_by_event_date(acled_data):
     return acled_data.groupby(['country', 'location'])['event_date'].nunique().nlargest(5)
 
+def find_duplicates_by_coordinates(acled_data):
+    """Finds all coordinates having more than one location name."""
+    unique_counts = acled_data.groupby(['latitude', 'longitude']).location.transform('nunique')
+    return acled_data[1 < unique_counts].groupby(['latitude', 'longitude', unique_counts]).location.unique()
+
 def write_excel_sheet(acled_data, writer, sheet_name):
     if acled_data.empty:
         print('Data is empty no excel sheet {} was created!'.format(sheet_name))
@@ -100,6 +105,7 @@ def write_excel_report(acled_data, file_name):
         write_excel_sheet(size_by_admin2(acled_data), writer, sheet_name='admin2')
         write_excel_sheet(size_by_admin3(acled_data), writer, sheet_name='admin3')
         write_excel_sheet(size_by_locations(acled_data), writer, sheet_name='locations')
+        write_excel_sheet(find_duplicates_by_coordinates(acled_data), writer, sheet_name='duplicates')
         write_excel_sheet(count_by_subevents(acled_data), writer, sheet_name='event_types')
         write_excel_sheet(count_by_event_date(acled_data), writer, sheet_name='event_dates')
 
