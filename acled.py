@@ -124,7 +124,7 @@ if __name__ == '__main__':
     if 1 < len(sys.argv):
         acled_filepath = sys.argv[1]
 
-    acled_environ_key = 'acled.data.filepath'
+    acled_environ_key = 'acled_file_path'
     if None is acled_filepath \
         and acled_environ_key in os.environ:
             acled_filepath = os.environ[acled_environ_key]
