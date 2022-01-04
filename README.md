@@ -14,4 +14,5 @@ Take a look at the [sample](https://github.com/gisfromscratch/geoint-py/blob/mai
 - [ArcGIS API for Python](https://developers.arcgis.com/python/)
 
 ### Geospatial Intelligence Publications
+- [Getting insights from political violence and protests around the world](https://gisfromscratch.medium.com/getting-insights-from-political-violence-and-protests-around-the-world-the-geospatial-ramp-up-5b35ba91d13)
 - [Geospatial Intelligence @ Medium](https://medium.com/geospatial-intelligence)
