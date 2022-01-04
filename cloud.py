@@ -42,5 +42,12 @@ class TestGeoProtestClient(unittest.TestCase):
         self.assertTrue('FeatureCollection' == geojson_type, 'The returned geojson must have a type of FeatureCollection!')
         self.assertTrue('features' in geojson_features, 'The returned geojson must have a features key!')
 
+        esri_features = self._client.aggregate(yesterday, OutFormat.ESRI)
+        self.assertIsNotNone(esri_features, 'The returned features must be initialized!')
+        self.assertTrue('geometryType' in esri_features, 'The returned esri result must have a geometry type!')
+        geometry_type = esri_features['geometryType']
+        self.assertTrue('esriGeometryPolygon' == geometry_type, 'The returned geometry type must be polygon!')
+        self.assertTrue('features' in esri_features, 'The returned esri result must have a features key!')
+
 if __name__ == '__main__':
     unittest.main()
