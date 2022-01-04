@@ -15,7 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 
+from arcgis.features import FeatureSet
 from datetime import datetime, timedelta
+import json
 import os
 import unittest
 from geoint.cloud.geoprotests import GeoProtestClient, OutFormat
@@ -48,6 +50,10 @@ class TestGeoProtestClient(unittest.TestCase):
         geometry_type = esri_features['geometryType']
         self.assertTrue('esriGeometryPolygon' == geometry_type, 'The returned geometry type must be polygon!')
         self.assertTrue('features' in esri_features, 'The returned esri result must have a features key!')
+        
+        esri_featureset = FeatureSet.from_json(json.dumps(esri_features))
+        spatial_dataframe = esri_featureset.sdf
+        self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
 
 if __name__ == '__main__':
     unittest.main()
