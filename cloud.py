@@ -35,7 +35,7 @@ class TestGeoProtestClient(unittest.TestCase):
         }
         cls._client = GeoProtestClient(url, auth_headers)
 
-    @unittest.skip('DEBUG')
+    #@unittest.skip('DEBUG')
     def test_aggregate_yesterday(self):
         yesterday = datetime.utcnow() - timedelta(days=1)
         geojson_features = self._client.aggregate(yesterday, OutFormat.GEOJSON)
@@ -56,10 +56,32 @@ class TestGeoProtestClient(unittest.TestCase):
         spatial_dataframe = esri_featureset.sdf
         self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
 
+    #@unittest.skip('DEBUG')
     def test_articles_yesterday(self):
         yesterday = datetime.utcnow() - timedelta(days=1)
         articles = self._client.articles(yesterday)
         self.assertIsNotNone(articles, 'The returned articles must be initialized!')
+
+    #@unittest.skip('DEBUG')
+    def test_hotspots_yesterday(self):
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        geojson_features = self._client.hotspots(yesterday, OutFormat.GEOJSON)
+        self.assertIsNotNone(geojson_features, 'The returned features must be initialized!')
+        self.assertTrue('type' in geojson_features, 'The returned geojson must have a type!')
+        geojson_type = geojson_features['type']
+        self.assertTrue('FeatureCollection' == geojson_type, 'The returned geojson must have a type of FeatureCollection!')
+        self.assertTrue('features' in geojson_features, 'The returned geojson must have a features key!')
+
+        esri_features = self._client.hotspots(yesterday, OutFormat.ESRI)
+        self.assertIsNotNone(esri_features, 'The returned features must be initialized!')
+        self.assertTrue('geometryType' in esri_features, 'The returned esri result must have a geometry type!')
+        geometry_type = esri_features['geometryType']
+        self.assertTrue('esriGeometryPoint' == geometry_type, 'The returned geometry type must be point!')
+        self.assertTrue('features' in esri_features, 'The returned esri result must have a features key!')
+        
+        esri_featureset = FeatureSet.from_json(json.dumps(esri_features))
+        spatial_dataframe = esri_featureset.sdf
+        self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
 
 if __name__ == '__main__':
     unittest.main()
