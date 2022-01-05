@@ -109,7 +109,7 @@ class GeoProtestClient(object):
         """
         Returns the hotspot locations related to protests/demonstrations.
         The date is optional. When not specified, we return the features of the last 24 hours.
-        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
         The format can be GeoJSON or Esri JSON.
         """
         return self._request_hotspots(date, format).json()
@@ -118,7 +118,7 @@ class GeoProtestClient(object):
         """
         Returns the hotspot locations related to protests/demonstrations.
         The date is optional. When not specified, we return the features of the last 24 hours.
-        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
         The format can be GeoJSON or Esri JSON.
         """
         return self._request_hotspots(date, format).text
@@ -127,7 +127,7 @@ class GeoProtestClient(object):
         """
         Returns the hotspot locations related to protests/demonstrations.
         The date is optional. When not specified, we return the features of the last 24 hours.
-        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
         The format can be GeoJSON or Esri JSON.
         """
         endpoint = '{0}/hotspots'.format(self._url)
