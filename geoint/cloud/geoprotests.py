@@ -65,6 +65,24 @@ class GeoProtestClient(object):
         The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
         The format can be GeoJSON or Esri JSON.
         """
+        return self._request_aggregate(date, format).json()
+    
+    def aggregate_as_text(self, date=None, format=OutFormat.GEOJSON):
+        """
+        Aggregates the broadcasted news related to protests/demonstrations using a spatial grid and returns the features as hexagonal bins.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
+        The format can be GeoJSON or Esri JSON.
+        """
+        return self._request_aggregate(date, format).text
+
+    def _request_aggregate(self, date=None, format=OutFormat.GEOJSON):
+        """
+        Aggregates the broadcasted news related to protests/demonstrations using a spatial grid and returns the features as hexagonal bins.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
+        The format can be GeoJSON or Esri JSON.
+        """
         endpoint = '{0}/aggregate'.format(self._url)
         params = {
             'format': str(format)
@@ -72,7 +90,7 @@ class GeoProtestClient(object):
         if date:
             params['date'] = datetime.strftime(date, '%Y-%m-%d')
 
-        return requests.request('GET', endpoint, headers=self._auth_headers, params=params).json()
+        return requests.request('GET', endpoint, headers=self._auth_headers, params=params)
 
     def articles(self, date=None):
         """
@@ -89,7 +107,25 @@ class GeoProtestClient(object):
 
     def hotspots(self, date=None, format=OutFormat.GEOJSON):
         """
-        Return the hotspot locations related to protests/demonstrations.
+        Returns the hotspot locations related to protests/demonstrations.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The format can be GeoJSON or Esri JSON.
+        """
+        return self._request_hotspots(date, format).json()
+
+    def hotspots_as_text(self, date=None, format=OutFormat.GEOJSON):
+        """
+        Returns the hotspot locations related to protests/demonstrations.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The format can be GeoJSON or Esri JSON.
+        """
+        return self._request_hotspots(date, format).text
+
+    def _request_hotspots(self, date=None, format=OutFormat.GEOJSON):
+        """
+        Returns the hotspot locations related to protests/demonstrations.
         The date is optional. When not specified, we return the features of the last 24 hours.
         The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
         The format can be GeoJSON or Esri JSON.
@@ -101,4 +137,4 @@ class GeoProtestClient(object):
         if date:
             params['date'] = datetime.strftime(date, '%Y-%m-%d')
 
-        return requests.request('GET', endpoint, headers=self._auth_headers, params=params).json()
+        return requests.request('GET', endpoint, headers=self._auth_headers, params=params)

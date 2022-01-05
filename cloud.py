@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 import json
 import os
 import unittest
+from geoint.cloud import protests_aggregate_as_featureset, protests_articles, protests_hotspots_as_featureset
 from geoint.cloud.geoprotests import GeoProtestClient, OutFormat
 
 class TestGeoProtestClient(unittest.TestCase):
@@ -82,6 +83,29 @@ class TestGeoProtestClient(unittest.TestCase):
         esri_featureset = FeatureSet.from_json(json.dumps(esri_features))
         spatial_dataframe = esri_featureset.sdf
         self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
+
+
+
+class TestEnvironmentFactory(unittest.TestCase):
+
+    def test_aggregate_yesterday(self):
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        esri_featureset = protests_aggregate_as_featureset(yesterday)
+        spatial_dataframe = esri_featureset.sdf
+        self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
+
+    def test_articles_yesterday(self):
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        articles = protests_articles(yesterday)
+        self.assertIsNotNone(articles, 'The returned articles must be initialized!')
+
+    def test_hotspots_yesterday(self):
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        esri_featureset = protests_hotspots_as_featureset(yesterday)
+        spatial_dataframe = esri_featureset.sdf
+        self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
+
+
 
 if __name__ == '__main__':
     unittest.main()
