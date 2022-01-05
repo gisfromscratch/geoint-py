@@ -35,6 +35,7 @@ class TestGeoProtestClient(unittest.TestCase):
         }
         cls._client = GeoProtestClient(url, auth_headers)
 
+    @unittest.skip('DEBUG')
     def test_aggregate_yesterday(self):
         yesterday = datetime.utcnow() - timedelta(days=1)
         geojson_features = self._client.aggregate(yesterday, OutFormat.GEOJSON)
@@ -54,6 +55,11 @@ class TestGeoProtestClient(unittest.TestCase):
         esri_featureset = FeatureSet.from_json(json.dumps(esri_features))
         spatial_dataframe = esri_featureset.sdf
         self.assertIsNotNone(spatial_dataframe, 'The returned features must represent a valid esri feature set!')
+
+    def test_articles_yesterday(self):
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        articles = self._client.articles(yesterday)
+        self.assertIsNotNone(articles, 'The returned articles must be initialized!')
 
 if __name__ == '__main__':
     unittest.main()

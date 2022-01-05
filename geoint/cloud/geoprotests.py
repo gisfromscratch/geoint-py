@@ -60,11 +60,41 @@ class GeoProtestClient(object):
 
     def aggregate(self, date=None, format=OutFormat.GEOJSON):
         """
-        Aggregates the broadcasted news using a spatial grid and returns the features as hexagonal bins.
-        The date is optional, when not specified the features of the last 24 hours are returned.
-        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        Aggregates the broadcasted news related to protests/demonstrations using a spatial grid and returns the features as hexagonal bins.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest available date.
+        The format can be GeoJSON or Esri JSON.
         """
         endpoint = '{0}/aggregate'.format(self._url)
+        params = {
+            'format': str(format)
+        }
+        if date:
+            params['date'] = datetime.strftime(date, '%Y-%m-%d')
+
+        return requests.request('GET', endpoint, headers=self._auth_headers, params=params).json()
+
+    def articles(self, date=None):
+        """
+        Returns a list of broadcasted articles related to protests/demonstrations.
+        The date is optional. When not specified, we return the articles of the last 24 hours.
+        The underlying web service saves the last 90 days and yesterday should be the latest available date.
+        """
+        endpoint = '{0}/articles'.format(self._url)
+        params = {}
+        if date:
+            params['date'] = datetime.strftime(date, '%Y-%m-%d')
+
+        return requests.request('GET', endpoint, headers=self._auth_headers, params=params).json()
+
+    def hotspots(self, date=None, format=OutFormat.GEOJSON):
+        """
+        Return the hotspot locations related to protests/demonstrations.
+        The date is optional. When not specified, we return the features of the last 24 hours.
+        The underlying hosted feature service saves the last 90 days and yesterday should be the latest availabe date.
+        The format can be GeoJSON or Esri JSON.
+        """
+        endpoint = '{0}/hotspots'.format(self._url)
         params = {
             'format': str(format)
         }
