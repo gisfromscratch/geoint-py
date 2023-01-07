@@ -1,5 +1,4 @@
 # geoint requirements
 
 arcgis>=1.8
-pandas>=1.5
 georapid>=0.1
