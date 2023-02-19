@@ -26,7 +26,7 @@ with open('README.md', 'r', encoding='utf-8') as readme_file:
 
 setuptools.setup(
     name='geoint',
-    version='0.1a5',
+    version='0.2',
     author='Jan Tschada',
     author_email='gisfromscratch@live.de',
     description='Simple python module for geospatial intelligence workflows.',
@@ -34,7 +34,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/gisfromscratch/geoint-py',
     packages=['geoint'],
-    install_requires=['arcgis>=1.8.0', 'pandas>=1.0.0'],
+    install_requires=['arcgis>=1.8', 'pandas>=1.5', 'georapid>=0.2'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',

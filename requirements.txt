@@ -1,0 +1,4 @@
+# geoint requirements
+
+arcgis>=1.8
+georapid>=0.2
