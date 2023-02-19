@@ -18,8 +18,8 @@ A bunch of geospatial intelligence workflows implemented using Python.
 
 ## Usage
 Take a look at the following jupyter notebooks:
-- [Sample binning](https://github.com/gisfromscratch/geoint-py/blob/main/Samples.ipynb)
-- [Sample geoprotests/geoconflicts API](https://github.com/gisfromscratch/geoint-py/blob/main/Samples-Cloud.ipynb)
+- [Sample binning](https://github.com/gisfromscratch/geoint-py/blob/main/samples/Samples.ipynb)
+- [Sample geoprotests/geoconflicts API](https://github.com/gisfromscratch/geoint-py/blob/main/samples/Samples-Cloud.ipynb)
 
 ## References
 - [ArcGIS API for Python](https://developers.arcgis.com/python/)
