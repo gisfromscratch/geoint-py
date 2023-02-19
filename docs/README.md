@@ -23,6 +23,8 @@ Take a look at the following jupyter notebooks:
 
 ## References
 - [ArcGIS API for Python](https://developers.arcgis.com/python/)
+- [geoprotests API](https://rapidapi.com/gisfromscratch/api/geoprotests/)
+- [geoconflicts API](https://rapidapi.com/gisfromscratch/api/geoconflicts/)
 
 ### Geospatial Intelligence Publications
 - [Getting insights from political violence and protests around the world](https://gisfromscratch.medium.com/getting-insights-from-political-violence-and-protests-around-the-world-the-geospatial-ramp-up-5b35ba91d13)
