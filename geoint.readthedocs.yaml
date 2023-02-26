@@ -19,3 +19,8 @@ formats:
 #   version: 3.7
 #   install:
 #   - requirements: docs/requirements.txt
+
+# Need krb5-config for arcgis>=2.0
+build:
+   apt_packages:
+   - libkrb5-dev
