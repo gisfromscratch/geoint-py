@@ -40,4 +40,5 @@ Geospatial Intelligence Publications
 ------------------------------------
 
 - `Getting insights from political violence and protests around the world <https://gisfromscratch.medium.com/getting-insights-from-political-violence-and-protests-around-the-world-the-geospatial-ramp-up-5b35ba91d13>`__
-- `Geospatial Intelligence @ Medium <https://medium.com/geospatial-intelligence>`__
+- `Yet another armed conflict database <https://medium.com/geospatial-intelligence/yet-another-armed-conflict-database-e60ccb403d7>`__
+- `Mapping the armed conflicts events of 24th February 2022 <https://medium.com/geospatial-intelligence/mapping-the-armed-conflicts-events-of-24th-february-2022-91298a496145>`__
