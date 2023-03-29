@@ -27,5 +27,6 @@ Take a look at the following jupyter notebooks:
 - [geoconflicts API](https://rapidapi.com/gisfromscratch/api/geoconflicts/)
 
 ### Geospatial Intelligence Publications
+- [Using Sentinel-1 SAR data for Imagery Intelligence — Detection of vessels](https://medium.com/geospatial-intelligence/using-sentinel-1-sar-data-for-imagery-intelligence-detection-of-vessels-df8e282ac2c0)
 - [Getting insights from political violence and protests around the world](https://gisfromscratch.medium.com/getting-insights-from-political-violence-and-protests-around-the-world-the-geospatial-ramp-up-5b35ba91d13)
 - [Geospatial Intelligence @ Medium](https://medium.com/geospatial-intelligence)
