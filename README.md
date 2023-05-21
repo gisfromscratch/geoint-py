@@ -1,5 +1,6 @@
 # geoint-py
 A bunch of geospatial intelligence workflows implemented using Python.
+The geoint module itself is licensed LGPL-3.0-or-later, the sample notebooks using the cloud services are licensed Apache-2.0.
 
 ## Features
 ### Create a rectangular spatial grid for binning
